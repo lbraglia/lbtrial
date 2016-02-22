@@ -55,7 +55,7 @@ blockrand2randlist <- function(x, f = NULL, footer = "") {
                        "Note" )
         ## change to alfanumeric id
         if (is.numeric(rl$ID))
-            rl$ID <- to_00_char(rl$ID, floor(log10(max(rl$ID))) + 1)
+            rl$ID <- lbmisc::to_00_char(rl$ID, floor(log10(max(rl$ID))) + 1)
 
         return(rl)
     })
