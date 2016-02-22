@@ -1,0 +1,8 @@
+Package: lbrct
+Title: RCT utility functions.
+Version: 0.1
+Authors@R: person('Luca', 'Braglia', email = 'lbraglia@mailbox.org', role = c('aut', 'cre'))
+Description: RCT utility functions.
+Depends: R (>= 3.2.3)
+License: GPL-3
+LazyData: true
