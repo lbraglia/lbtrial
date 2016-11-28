@@ -1,35 +1,41 @@
+## normalize_x in order to handle both single data.frame and list
+## of data.frames
+normalize_x <- function(x){
+    if (is.data.frame(x)){
+        x <- list(x)
+        names(x) <- '1'
+    } else if (is.list(x)) {
+        if (is.null(names(x)))
+            names(x) <- as.character(seq_len(length(x)))
+    } else
+        stop('x must be a data.frame or a list of data frames')
+
+    x
+}
+
+
 #' Create a randomization list from a list of blockrand generated data.frame 
 #'
 #' Create a randomization list from a list of blockrand generated data.frame
 #' 
 #' @param x named list of blockrand data.frame (names will be used as
-#'          sheet name)  
-#' @param f path to file to save in (overwriting the contents). If NULL
-#' the list is displayed.
-#' @param footer a character vector used in the page footer (recicled)
+#'     sheet name)
+#' @param f path to file to save in (overwriting the contents). If
+#'     NULL the list is displayed.
+#' @param footer a character vector used as page central
+#'     footer(s). Page numbers are on the left, while date/time is on
+#'     the right.
 #' @export
 blockrand2randlist <- function(x, f = NULL, footer = "") {
-
-    ## normalize_x in order to handle both single data.frame and list
-    ## of data.frames
-    normalize_x <- function(x){
-        if (is.data.frame(x)){
-            x <- list(x)
-            names(x) <- '1'
-        } else if (is.list(x)) {
-            if (is.null(names(x)))
-                names(x) <- as.character(seq_len(length(x)))
-        } else
-            stop('x must be a data.frame or a list of data frames')
-        
-        return(x)
-    }
 
     x <- normalize_x(x)
     sheet_names <- names(x)
 
-    if (!(is.character(footer) && length(footer) == 1L))
-        stop('footer must be a character of length 1')
+    if (!(is.character(footer) && length(footer) %in% c(1L, length(x)))){
+        msg <- c("footer must be a character of length 1 ",
+                 "or of the same number of x's data.frames")
+        stop(msg)
+    }
     
     if (!((is.character(f) && length(f) == 1L) || is.null(f)))
         stop('f must be a character of length 1 or NULL')
@@ -70,19 +76,17 @@ blockrand2randlist <- function(x, f = NULL, footer = "") {
                                         "Sigla di chi risponde",
                                         "Note"
                                         ), nrow = 1)
-    header_inv[1, c(5,9)] <- c("Dati di chi risponde",
-                               "Sigla di chi chiama")
+    header_inv[1, c(5,9)] <- c("Dati di chi risponde", "Sigla di chi chiama")
 
-    
     ## Setup the workbook
     wb <- openxlsx::createWorkbook()
-    lapply(sheet_names, function(s)
-        openxlsx::addWorksheet(wb = wb,
-                               sheetName = s, 
-                               footer = c("Page &[Page] of &[Pages]", 
-                                          sprintf("%s[Strato: %s]", footer, s),
-                                          "&[Date] &[Time]") )
-        )
+    worksheet_creator <- function(s, foot) {
+        openxlsx::addWorksheet(wb = wb, sheetName = s,
+                               footer = c("Page &[Page] of &[Pages]", # left
+                                          foot,                       # centre
+                                          "&[Date] &[Time]") )        # right
+    }
+    Map(worksheet_creator, as.list(sheet_names), as.list(footer))
   
     ## Page setup variables
     ColConversionFactor <- 6
@@ -93,7 +97,7 @@ blockrand2randlist <- function(x, f = NULL, footer = "") {
     margins <- 0.4 # inches == 1 cm
     
     row_heights <- lapply(actual_n, function(n) {
-        ## rep(c(headerRowHeights, otherRowHeights), c(2, nrow(x[[1]])))        
+        ## rep(c(headerRowHeights, otherRowHeights), c(2, nrow(x[[1]])))
         rep(c(headerRowHeights, otherRowHeights), c(2, n))
     })
 

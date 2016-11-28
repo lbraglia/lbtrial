@@ -10,10 +10,12 @@ blockrand2randlist(x, f = NULL, footer = "")
 \item{x}{named list of blockrand data.frame (names will be used as
 sheet name)}
 
-\item{f}{path to file to save in (overwriting the contents). If NULL
-the list is displayed.}
+\item{f}{path to file to save in (overwriting the contents). If
+NULL the list is displayed.}
 
-\item{footer}{a character vector used in the page footer (recicled)}
+\item{footer}{a character vector used as page central
+footer(s). Page numbers are on the left, while date/time is on
+the right.}
 }
 \description{
 Create a randomization list from a list of blockrand generated data.frame
