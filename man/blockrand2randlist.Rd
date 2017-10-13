@@ -20,4 +20,3 @@ the right.}
 \description{
 Create a randomization list from a list of blockrand generated data.frame
 }
-
