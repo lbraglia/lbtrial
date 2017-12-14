@@ -199,3 +199,94 @@ blockrand2randlist <- function(x, f = NULL, footer = "") {
 
     }
 }
+
+
+
+
+
+    randlist_header <- "\\documentclass[a4paper, 12pt]{article}
+\\renewcommand*\\familydefault{\\sfdefault}
+\\usepackage[T1]{fontenc}
+\\usepackage[utf8]{inputenc}
+\\usepackage[english, italian]{babel}
+\\usepackage[yyyymmdd]{datetime}
+\\renewcommand{\\dateseparator}{-}
+\\usepackage[
+landscape,
+a4paper,
+top=0.5cm,
+bottom=1.5cm,
+left=0.3cm,
+right=0.3cm
+]{geometry}
+\\usepackage{lastpage}
+\\usepackage{multirow, makecell}
+\\usepackage{fancyhdr}
+\\pagestyle{fancy}
+\\renewcommand{\\headrulewidth}{0pt}
+\\lfoot{Page \\thepage{} of \\pageref{LastPage}}
+\\rfoot{\\today{} \\currenttime}
+\\cfoot{%s}
+\\usepackage{longtable,array}
+\\newcolumntype{G}{>{\\centering\\arraybackslash}p{3cm}}
+\\newcolumntype{M}{>{\\centering\\arraybackslash}p{1.8cm}}
+\\newcolumntype{P}{>{\\centering\\arraybackslash}p{1.5cm}}
+\\begin{document}
+\\renewcommand{\\arraystretch}{2.5}
+\\begin{longtable}{|P|G|G|P|G|G|P|G|M|G|}
+  \\hline
+  \\multicolumn{4}{|c|}{\\textbf{Dati del paziente}} &
+  \\multicolumn{2}{c|}{\\textbf{Dati di chi %s}} &
+  \\multicolumn{2}{c|}{\\textbf{Dati della chiamata}} & 
+  \\multirowcell{2}{\\textbf{Sigla} \\\\ \\textbf{di chi} \\\\ \\textbf{%s}}&
+  \\multirowcell{2}{\\textbf{Note}} \\\\
+  \\cline{1-8}
+  \\textbf{ID} & 
+  \\textbf{Cognome} & 
+  \\textbf{Nome} & 
+  \\textbf{TRAT} & 
+  \\textbf{Cognome} & 
+  \\textbf{Nome} & 
+  \\textbf{Ora} & 
+  \\textbf{Data} &  &  \\\\ 
+  \\hline
+  \\endhead
+"
+
+    x <- "A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
+A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline
+"
+
+    footer <- "\\end{longtable}
+\\end{document}
+"
+cr <- c('chiama', 'risponde')
+
+make_tex <- function(table_content = x,
+                     studio_braccio = "Studià BVD - [Strato: asmn]",
+                     chiama_risp_1 = cr[1],
+                     chiama_risp_2 = cr[2],
+                     output_file = 'test.tex'){
+    header <- sprintf(randlist_header,
+                      studio_braccio, chiama_risp_1, chiama_risp_2)
+    cat(header, table_content, footer, file = output_file)
+    tools::texi2pdf(output_file)
+    ## knitr::knit2pdf(output_file, encoding = 'UTF-8')
+    system('evince test.pdf &')
+}
+
+make_tex()

@@ -1,0 +1,66 @@
+\documentclass[a4paper, 12pt]{article}
+\renewcommand*\familydefault{\sfdefault} %per il font sans serif
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, italian]{babel}
+\usepackage[yyyymmdd]{datetime}
+\renewcommand{\dateseparator}{-}
+\usepackage[
+landscape,
+a4paper,
+top=0.5cm,
+bottom=1.5cm,
+left=0.5cm,
+right=0.5cm
+]{geometry}
+\usepackage{lastpage}
+\usepackage{multirow, makecell}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\lfoot{Page \thepage{} of \pageref{LastPage}}
+\rfoot{\today{} \currenttime}
+\cfoot{Studio BVD - PI Dr. Marco Coassin (IRCCS - AUSL RE) - [Strato: asmn]}
+\usepackage{longtable,array}
+\newcolumntype{G}{>{\centering\arraybackslash}p{3cm}}
+\newcolumntype{P}{>{\centering\arraybackslash}p{1.5cm}}
+\begin{document}
+\renewcommand{\arraystretch}{2.5}
+  
+\begin{longtable}{|P|G|G|P|G|G|P|G|P|G|}
+  \hline
+  \multicolumn{4}{|c|}{\textbf{Dati del paziente}} &
+  \multicolumn{2}{c|}{\textbf{Dati di chi chiama}} &
+  \multicolumn{2}{c|}{\textbf{Dati della chiamata}} & 
+  \multirowcell{2}{\textbf{Sigla} \\ \textbf{di chi} \\ \textbf{chiama}}&
+  \multirowcell{2}{\textbf{Note}} \\
+  \cline{1-8}
+  \textbf{ID} & 
+  \textbf{Cognome} & 
+  \textbf{Nome} & 
+  \textbf{TRAT} & 
+  \textbf{Cognome} & 
+  \textbf{Nome} & 
+  \textbf{Ora} & 
+  \textbf{Data} &  &  \\ 
+  \hline
+  \endhead
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+  A-001 &  &  & C &  &   &  &  &   &  \\ \hline 
+\end{longtable}
+
+\end{document}
