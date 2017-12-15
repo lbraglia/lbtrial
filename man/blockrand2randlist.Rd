@@ -4,7 +4,7 @@
 \alias{blockrand2randlist}
 \title{Create a randomization list from a list of blockrand generated data.frame}
 \usage{
-blockrand2randlist(x, f = NULL, footer = "")
+blockrand2randlist(x, f = "/tmp/randlist", footer = "")
 }
 \arguments{
 \item{x}{named list of blockrand data.frame (names will be used as

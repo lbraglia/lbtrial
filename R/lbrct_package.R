@@ -3,6 +3,9 @@
 #' @name lbrct
 #' @docType package
 #' @importFrom lbmisc to_00_char
+#' @importFrom xtable xtable
+#' @importFrom xtable print.xtable
+#' @importFrom tools texi2pdf
 #' @importFrom openxlsx addStyle
 #' @importFrom openxlsx addWorksheet
 #' @importFrom openxlsx createStyle
