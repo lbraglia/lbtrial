@@ -5,7 +5,7 @@
 \title{Create pdf randomization lists from a list of blockrand
 generated data.frame}
 \usage{
-randlist2pdf(x, path_prefix = "/tmp/randlist", footer = "")
+randlist2pdf(x = NULL, path_prefix = "/tmp/randlist", footer = "")
 }
 \arguments{
 \item{x}{a single data.frame or a named randlist (that is a

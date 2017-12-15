@@ -1,7 +1,9 @@
 ## normalize_x in order to handle both single data.frame and list
 ## of data.frames
 normalize_randlists <- function(x){
-    if (is.data.frame(x)){
+    if (is.null(x)){
+        stop("x can't be null")
+    } else if (is.data.frame(x)){
         x <- list(x)
         names(x) <- '1'
     } else if (is.list(x)) {
@@ -14,7 +16,7 @@ normalize_randlists <- function(x){
 }
 
 ## header delle liste di randomizzazione
-    randlist_header <- "\\documentclass[a4paper, 12pt]{article}
+randlist_header <- "\\documentclass[a4paper, 12pt]{article}
 \\renewcommand*\\familydefault{\\sfdefault}
 \\usepackage[T1]{fontenc}
 \\usepackage[utf8]{inputenc}
@@ -63,9 +65,6 @@ right=0.3cm
   \\endhead
 "
 
-
-
-
 #' Create pdf randomization lists from a list of blockrand
 #' generated data.frame 
 #'
@@ -81,7 +80,7 @@ right=0.3cm
 #'     footer(s). Must be of length 1 if x is a data.frame or of the
 #'     same length of x, if it's a list.
 #' @export
-randlist2pdf <- function(x,
+randlist2pdf <- function(x = NULL,
                          path_prefix = '/tmp/randlist',
                          footer = "") {
 
@@ -130,14 +129,9 @@ randlist2pdf <- function(x,
 }
 
 
+make_randlist_pdf <- function(x = NULL, cfoot = NULL, f = NULL){
 
-
-make_randlist_pdf <- function(x = NULL,
-                              cfoot = NULL,
-                              f = NULL)
-{
-
-    target <- list('TRIAL_CENTER', 'INVESTIGATOR')
+    target <- list('TRIAL_CENTER', 'INVESTIGATORS')
     texfiles <- lapply(target, function(y) sprintf("%s_%s.tex", f, y))
     pdffiles <- lapply(target, function(y) sprintf("%s_%s.pdf", f, y))
     dbs <- list('tc' = x, 'inv' = {x$treatment <- NA; x})
@@ -173,12 +167,9 @@ make_randlist_pdf <- function(x = NULL,
 }
 
 
-
 ## -------------------------------------------------------------------------
 ## OLD STUFF
 ## -------------------------------------------------------------------------
-
-
 
 # Create a randomization list from a list of blockrand generated data.frame 
 #
