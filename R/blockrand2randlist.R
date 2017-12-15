@@ -26,7 +26,9 @@ normalize_x <- function(x){
 #'     footer(s). Page numbers are on the left, while date/time is on
 #'     the right.
 #' @export
-blockrand2randlist <- function(x, f = NULL, footer = "") {
+blockrand2randlist <- function(x,
+                               f = '/tmp/randlist',
+                               footer = "") {
 
     x <- normalize_x(x)
     sheet_names <- names(x)
@@ -66,6 +68,20 @@ blockrand2randlist <- function(x, f = NULL, footer = "") {
         return(rl)
     })
 
+    ## -----------------
+    ## LATEX/PDF OUTPUT
+    ## -----------------
+
+    ## occorre aggiungere il nome dello strato
+    files <- paste(f, preprocess_varnames(names(x)), sep = '_')
+    Map(function(db, footer, file){
+        make_pdf_randlist(db, cfoot = footer, f = file)
+    }, x, as.list(footers), as.list(files))
+                  
+    ## -----------------
+    ## EXCEL STUFF BELOW
+    ## -----------------
+    
     ## Sheets' header
     header_inv <- header_tc <- matrix(c("Dati del paziente",
                                         rep(NA,3),
@@ -252,41 +268,61 @@ right=0.3cm
   \\hline
   \\endhead
 "
-
-    x <- "A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline 
-A-001 &  &  & C &  &   &  &  &   &  \\\\ \\hline
-"
-
     footer <- "\\end{longtable}
 \\end{document}
 "
-cr <- c('chiama', 'risponde')
 
-make_tex <- function(table_content = x,
-                     studio_braccio = "Studià BVD - [Strato: asmn]",
-                     chiama_risp_1 = cr[1],
-                     chiama_risp_2 = cr[2],
-                     output_file = 'test.tex'){
-    header <- sprintf(randlist_header,
-                      studio_braccio, chiama_risp_1, chiama_risp_2)
-    cat(header, table_content, footer, file = output_file)
-    tools::texi2pdf(output_file)
-    ## knitr::knit2pdf(output_file, encoding = 'UTF-8')
-    system('evince test.pdf &')
+
+make_pdf_randlist <- function(x = NULL,
+                              cfoot = NULL,
+                              f = 'randomization_list',
+                              compile = TRUE,
+                              view = FALSE)
+{
+
+    target <- list('TRIAL_CENTER', 'INVESTIGATOR')
+    texfiles <- lapply(target, function(y) sprintf("%s_%s.tex", f, y))
+    pdffiles <- lapply(target, function(y) sprintf("%s_%s.pdf", f, y))
+    dbs <- list('tc' = x, 'inv' = {x$TRAT <- NA; x})
+    
+    cr_base <- c('chiama', 'risponde')
+    cr <- list('tc' = cr_base, 'inv' = rev(cr_base))
+    
+    make_header <- function(cr) sprintf(randlist_header, cfoot, cr[1], cr[2])
+    headers <- Map(make_header, cr)
+    
+    make_table_contents <- function(x){    
+        xtable::print.xtable(xtable::xtable(x),
+                             print.results = FALSE,
+                             comment = FALSE,
+                             include.colnames = FALSE, 
+                             include.rownames = FALSE,
+                             only.contents = TRUE,
+                             hline.after = seq_len(nrow(x)))
+    }
+    
+    table_contents <- lapply(dbs, make_table_contents)
+    
+    tex_maker <- function(h, tc, foot, of) cat(h, tc, foot, file = of)
+    
+    Map(tex_maker, headers, table_contents, list(footer), texfiles)
+
+    if (compile){
+        browser()
+        compiler <- function(f) {
+            oldpwd <- getwd()
+            on.exit(setwd(oldpwd))
+            setwd(dirname(path.expand(f)))
+            tools::texi2pdf(f, clean = TRUE)
+        }
+        lapply(texfiles, compiler)
+    }
+    
+    if (view){
+        viewer <- function(x) system(sprintf('evince %s &', x))
+        lapply(pdffiles, viewer)
+    }
 }
 
-make_tex()
+
+## make_pdf_randlist(x = db)
