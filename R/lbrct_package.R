@@ -6,15 +6,16 @@
 #' @importFrom xtable xtable
 #' @importFrom xtable print.xtable
 #' @importFrom tools texi2pdf
-#' @importFrom openxlsx addStyle
-#' @importFrom openxlsx addWorksheet
-#' @importFrom openxlsx createStyle
-#' @importFrom openxlsx createWorkbook
-#' @importFrom openxlsx mergeCells
-#' @importFrom openxlsx openXL
-#' @importFrom openxlsx pageSetup
-#' @importFrom openxlsx saveWorkbook
-#' @importFrom openxlsx setColWidths
-#' @importFrom openxlsx setRowHeights
-#' @importFrom openxlsx writeData
 NULL
+
+# @importFrom openxlsx addStyle
+# @importFrom openxlsx addWorksheet
+# @importFrom openxlsx createStyle
+# @importFrom openxlsx createWorkbook
+# @importFrom openxlsx mergeCells
+# @importFrom openxlsx openXL
+# @importFrom openxlsx pageSetup
+# @importFrom openxlsx saveWorkbook
+# @importFrom openxlsx setColWidths
+# @importFrom openxlsx setRowHeights
+# @importFrom openxlsx writeData

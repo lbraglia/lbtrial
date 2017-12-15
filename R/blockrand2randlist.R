@@ -1,6 +1,6 @@
 ## normalize_x in order to handle both single data.frame and list
 ## of data.frames
-normalize_x <- function(x){
+normalize_randlists <- function(x){
     if (is.data.frame(x)){
         x <- list(x)
         names(x) <- '1'
@@ -13,20 +13,185 @@ normalize_x <- function(x){
     x
 }
 
+## header delle liste di randomizzazione
+    randlist_header <- "\\documentclass[a4paper, 12pt]{article}
+\\renewcommand*\\familydefault{\\sfdefault}
+\\usepackage[T1]{fontenc}
+\\usepackage[utf8]{inputenc}
+\\usepackage[english, italian]{babel}
+\\usepackage[yyyymmdd]{datetime}
+\\renewcommand{\\dateseparator}{-}
+\\usepackage[
+landscape,
+a4paper,
+top=0.5cm,
+bottom=1.5cm,
+left=0.3cm,
+right=0.3cm
+]{geometry}
+\\usepackage{lastpage}
+\\usepackage{multirow, makecell}
+\\usepackage{fancyhdr}
+\\pagestyle{fancy}
+\\renewcommand{\\headrulewidth}{0pt}
+\\lfoot{Page \\thepage{} of \\pageref{LastPage}}
+\\rfoot{\\today{} \\currenttime}
+\\cfoot{%s}
+\\usepackage{longtable,array}
+\\newcolumntype{G}{>{\\centering\\arraybackslash}p{3cm}}
+\\newcolumntype{M}{>{\\centering\\arraybackslash}p{1.8cm}}
+\\newcolumntype{P}{>{\\centering\\arraybackslash}p{1.5cm}}
+\\begin{document}
+\\renewcommand{\\arraystretch}{2.5}
+\\begin{longtable}{|P|G|G|P|G|G|P|G|M|G|}
+  \\hline
+  \\multicolumn{4}{|c|}{\\textbf{Dati del paziente}} &
+  \\multicolumn{2}{c|}{\\textbf{Dati di chi %s}} &
+  \\multicolumn{2}{c|}{\\textbf{Dati della chiamata}} & 
+  \\multirowcell{2}{\\textbf{Sigla} \\\\ \\textbf{di chi} \\\\ \\textbf{%s}}&
+  \\multirowcell{2}{\\textbf{Note}} \\\\
+  \\cline{1-8}
+  \\textbf{ID} & 
+  \\textbf{Cognome} & 
+  \\textbf{Nome} & 
+  \\textbf{TRAT} & 
+  \\textbf{Cognome} & 
+  \\textbf{Nome} & 
+  \\textbf{Ora} & 
+  \\textbf{Data} &  &  \\\\ 
+  \\hline
+  \\endhead
+"
 
-#' Create a randomization list from a list of blockrand generated data.frame 
+
+
+
+#' Create pdf randomization lists from a list of blockrand
+#' generated data.frame 
 #'
-#' Create a randomization list from a list of blockrand generated data.frame
+#' Create pdf randomization lists from a list of blockrand
+#' generated data.frame
 #' 
-#' @param x named list of blockrand data.frame (names will be used as
-#'     sheet name)
-#' @param f path to file to save in (overwriting the contents). If
-#'     NULL the list is displayed.
+#' @param x a single data.frame or a named randlist (that is a
+#'     data.frame with id and treatment columns). Names are used for
+#'     file naming
+#' @param path_prefix path prefix of the files to save
+#'     in (overwriting the contents).
 #' @param footer a character vector used as page central
-#'     footer(s). Page numbers are on the left, while date/time is on
-#'     the right.
+#'     footer(s). Must be of length 1 if x is a data.frame or of the
+#'     same length of x, if it's a list.
 #' @export
-blockrand2randlist <- function(x,
+randlist2pdf <- function(x,
+                         path_prefix = '/tmp/randlist',
+                         footer = "") {
+
+    ## make a list of data.frames
+    x <- normalize_randlists(x)
+    xnames <- preprocess_varnames(names(x))
+    ## check that these are randlists
+    are_rl <- lapply(x, function(x) all(c('id', 'treatment') %in% names(x)))
+    if (!all(unlist(are_rl)))
+        stop('x has not id and/or treatment variable/s')
+
+    if (!(is.character(footer) && length(footer) %in% c(1L, length(x)))){
+        msg <- c("footer must be a character of length 1 ",
+                 "or of the same number of x's data.frames")
+        stop(msg)
+    }
+    
+    if (!(is.character(path_prefix) && length(path_prefix) == 1L))
+        stop('path_prefix must be a character of length 1')
+
+    ## modify each data frame to a proper output format
+    x <- lapply(x, function(rl){
+        ## Add needed columns
+        new_vars <- c("cognome_pz", "nome_pz", "cognome_dr", "nome_dr",
+                      "ora", "data", "sigla", "note")
+        rl[new_vars] <- NA
+        ## Keep only what's needed
+        needed_vars <- c("id", "cognome_pz",  "nome_pz",
+                         "treatment", "cognome_dr", "nome_dr",
+                         "ora", "data", "sigla", "note" )
+        
+        rl <- rl[needed_vars]
+        ## change to alfanumeric id
+        if (is.numeric(rl$id))
+            rl$id <- lbmisc::to_00_char(rl$id, floor(log10(max(rl$id))) + 1)
+
+        return(rl)
+    })
+    
+    ## occorre aggiungere il nome dello strato
+    files <- paste(path_prefix, xnames, sep = '_')
+    Map(function(db, footer, file){
+        make_randlist_pdf(x = db, cfoot = footer, f = file)
+    }, x, as.list(footers), as.list(files))
+    invisible(NULL)
+}
+
+
+
+
+make_randlist_pdf <- function(x = NULL,
+                              cfoot = NULL,
+                              f = NULL)
+{
+
+    target <- list('TRIAL_CENTER', 'INVESTIGATOR')
+    texfiles <- lapply(target, function(y) sprintf("%s_%s.tex", f, y))
+    pdffiles <- lapply(target, function(y) sprintf("%s_%s.pdf", f, y))
+    dbs <- list('tc' = x, 'inv' = {x$treatment <- NA; x})
+
+    ## composizione documento
+    cr_base <- c('chiama', 'risponde')
+    crs <- list('tc' = cr_base, 'inv' = rev(cr_base))
+    make_header <- function(x) sprintf(randlist_header, cfoot, x[1], x[2])
+    headers <- Map(make_header, crs)
+    make_table_contents <- function(x){    
+        xtable::print.xtable(xtable::xtable(x),
+                             print.results = FALSE,
+                             comment = FALSE,
+                             include.colnames = FALSE, 
+                             include.rownames = FALSE,
+                             only.contents = TRUE,
+                             hline.after = seq_len(nrow(x)))
+    }
+    table_contents <- lapply(dbs, make_table_contents)
+    randlist_footer <- list("\\end{longtable}\\end{document}")
+    tex_maker <- function(h, tc, foot, of) cat(h, tc, foot, file = of)
+    Map(tex_maker, headers, table_contents, randlist_footer, texfiles)
+
+    ## compiling
+    compiler <- function(f) {
+        oldpwd <- getwd()
+        on.exit(setwd(oldpwd))
+        setwd(dirname(path.expand(f)))
+        tools::texi2pdf(f, clean = TRUE)
+    }
+    lapply(texfiles, compiler)
+    invisible(NULL)
+}
+
+
+
+## -------------------------------------------------------------------------
+## OLD STUFF
+## -------------------------------------------------------------------------
+
+
+
+# Create a randomization list from a list of blockrand generated data.frame 
+#
+# Create a randomization list from a list of blockrand generated data.frame
+# 
+# @param x named list of blockrand data.frame (names will be used as
+#     sheet name)
+# @param f path to file to save in (overwriting the contents). If
+#     NULL the list is displayed.
+# @param footer a character vector used as page central
+#     footer(s). Page numbers are on the left, while date/time is on
+#     the right.
+old_blockrand2randlist <- function(x,
                                f = '/tmp/randlist',
                                footer = "") {
 
@@ -215,114 +380,3 @@ blockrand2randlist <- function(x,
 
     }
 }
-
-
-
-
-
-    randlist_header <- "\\documentclass[a4paper, 12pt]{article}
-\\renewcommand*\\familydefault{\\sfdefault}
-\\usepackage[T1]{fontenc}
-\\usepackage[utf8]{inputenc}
-\\usepackage[english, italian]{babel}
-\\usepackage[yyyymmdd]{datetime}
-\\renewcommand{\\dateseparator}{-}
-\\usepackage[
-landscape,
-a4paper,
-top=0.5cm,
-bottom=1.5cm,
-left=0.3cm,
-right=0.3cm
-]{geometry}
-\\usepackage{lastpage}
-\\usepackage{multirow, makecell}
-\\usepackage{fancyhdr}
-\\pagestyle{fancy}
-\\renewcommand{\\headrulewidth}{0pt}
-\\lfoot{Page \\thepage{} of \\pageref{LastPage}}
-\\rfoot{\\today{} \\currenttime}
-\\cfoot{%s}
-\\usepackage{longtable,array}
-\\newcolumntype{G}{>{\\centering\\arraybackslash}p{3cm}}
-\\newcolumntype{M}{>{\\centering\\arraybackslash}p{1.8cm}}
-\\newcolumntype{P}{>{\\centering\\arraybackslash}p{1.5cm}}
-\\begin{document}
-\\renewcommand{\\arraystretch}{2.5}
-\\begin{longtable}{|P|G|G|P|G|G|P|G|M|G|}
-  \\hline
-  \\multicolumn{4}{|c|}{\\textbf{Dati del paziente}} &
-  \\multicolumn{2}{c|}{\\textbf{Dati di chi %s}} &
-  \\multicolumn{2}{c|}{\\textbf{Dati della chiamata}} & 
-  \\multirowcell{2}{\\textbf{Sigla} \\\\ \\textbf{di chi} \\\\ \\textbf{%s}}&
-  \\multirowcell{2}{\\textbf{Note}} \\\\
-  \\cline{1-8}
-  \\textbf{ID} & 
-  \\textbf{Cognome} & 
-  \\textbf{Nome} & 
-  \\textbf{TRAT} & 
-  \\textbf{Cognome} & 
-  \\textbf{Nome} & 
-  \\textbf{Ora} & 
-  \\textbf{Data} &  &  \\\\ 
-  \\hline
-  \\endhead
-"
-    footer <- "\\end{longtable}
-\\end{document}
-"
-
-
-make_pdf_randlist <- function(x = NULL,
-                              cfoot = NULL,
-                              f = 'randomization_list',
-                              compile = TRUE,
-                              view = FALSE)
-{
-
-    target <- list('TRIAL_CENTER', 'INVESTIGATOR')
-    texfiles <- lapply(target, function(y) sprintf("%s_%s.tex", f, y))
-    pdffiles <- lapply(target, function(y) sprintf("%s_%s.pdf", f, y))
-    dbs <- list('tc' = x, 'inv' = {x$TRAT <- NA; x})
-    
-    cr_base <- c('chiama', 'risponde')
-    cr <- list('tc' = cr_base, 'inv' = rev(cr_base))
-    
-    make_header <- function(cr) sprintf(randlist_header, cfoot, cr[1], cr[2])
-    headers <- Map(make_header, cr)
-    
-    make_table_contents <- function(x){    
-        xtable::print.xtable(xtable::xtable(x),
-                             print.results = FALSE,
-                             comment = FALSE,
-                             include.colnames = FALSE, 
-                             include.rownames = FALSE,
-                             only.contents = TRUE,
-                             hline.after = seq_len(nrow(x)))
-    }
-    
-    table_contents <- lapply(dbs, make_table_contents)
-    
-    tex_maker <- function(h, tc, foot, of) cat(h, tc, foot, file = of)
-    
-    Map(tex_maker, headers, table_contents, list(footer), texfiles)
-
-    if (compile){
-        browser()
-        compiler <- function(f) {
-            oldpwd <- getwd()
-            on.exit(setwd(oldpwd))
-            setwd(dirname(path.expand(f)))
-            tools::texi2pdf(f, clean = TRUE)
-        }
-        lapply(texfiles, compiler)
-    }
-    
-    if (view){
-        viewer <- function(x) system(sprintf('evince %s &', x))
-        lapply(pdffiles, viewer)
-    }
-}
-
-
-## make_pdf_randlist(x = db)
