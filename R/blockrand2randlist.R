@@ -1,4 +1,4 @@
-## normalize_x in order to handle both single data.frame and list
+## normalize_randlists in order to handle both single data.frame and list
 ## of data.frames
 normalize_randlists <- function(x){
     if (is.null(x)){
@@ -86,7 +86,7 @@ randlist2pdf <- function(x = NULL,
 
     ## make a list of data.frames
     x <- normalize_randlists(x)
-    xnames <- preprocess_varnames(names(x))
+    xnames <- lbmisc::preprocess_varnames(names(x))
     ## check that these are randlists
     are_rl <- lapply(x, function(x) all(c('id', 'treatment') %in% names(x)))
     if (!all(unlist(are_rl)))
@@ -182,192 +182,193 @@ make_randlist_pdf <- function(x = NULL, cfoot = NULL, f = NULL){
 # @param footer a character vector used as page central
 #     footer(s). Page numbers are on the left, while date/time is on
 #     the right.
-old_blockrand2randlist <- function(x,
-                               f = '/tmp/randlist',
-                               footer = "") {
 
-    x <- normalize_x(x)
-    sheet_names <- names(x)
+## old_blockrand2randlist <- function(x,
+##                                f = '/tmp/randlist',
+##                                footer = "") {
 
-    if (!(is.character(footer) && length(footer) %in% c(1L, length(x)))){
-        msg <- c("footer must be a character of length 1 ",
-                 "or of the same number of x's data.frames")
-        stop(msg)
-    }
+##     x <- normalize_x(x)
+##     sheet_names <- names(x)
+
+##     if (!(is.character(footer) && length(footer) %in% c(1L, length(x)))){
+##         msg <- c("footer must be a character of length 1 ",
+##                  "or of the same number of x's data.frames")
+##         stop(msg)
+##     }
     
-    if (!((is.character(f) && length(f) == 1L) || is.null(f)))
-        stop('f must be a character of length 1 or NULL')
+##     if (!((is.character(f) && length(f) == 1L) || is.null(f)))
+##         stop('f must be a character of length 1 or NULL')
 
-    ## actual n for each strata (depending on 
-    actual_n <- unlist(lapply(x, nrow))
+##     ## actual n for each strata (depending on 
+##     actual_n <- unlist(lapply(x, nrow))
     
-    ## modify each data frame to a proper output format
-    x <- lapply(x, function(rl){
-        ## Add needed columns
-        rl[c("Cognome.pz", "Nome.pz",
-             "Cognome.dr", "Nome.dr",
-             "Ora", "Data", "Sigla", "Note"
-             )] <- NA
-        ## Remove unneeded stuff
-        rl <- rl[c("id", "Cognome.pz",  "Nome.pz",
-                   "treatment", "Cognome.dr", "Nome.dr",
-                   "Ora", "Data", "Sigla", "Note" )]
-        ## Rename columns
-        names(rl) <- c("ID", "Cognome",  "Nome",
-                       "TRAT", "Cognome", "Nome",
-                       "Ora", "Data", "Sigla di chi risponde", 
-                       "Note")
-        ## change to alfanumeric id
-        if (is.numeric(rl$ID))
-            rl$ID <- lbmisc::to_00_char(rl$ID, floor(log10(max(rl$ID))) + 1)
+##     ## modify each data frame to a proper output format
+##     x <- lapply(x, function(rl){
+##         ## Add needed columns
+##         rl[c("Cognome.pz", "Nome.pz",
+##              "Cognome.dr", "Nome.dr",
+##              "Ora", "Data", "Sigla", "Note"
+##              )] <- NA
+##         ## Remove unneeded stuff
+##         rl <- rl[c("id", "Cognome.pz",  "Nome.pz",
+##                    "treatment", "Cognome.dr", "Nome.dr",
+##                    "Ora", "Data", "Sigla", "Note" )]
+##         ## Rename columns
+##         names(rl) <- c("ID", "Cognome",  "Nome",
+##                        "TRAT", "Cognome", "Nome",
+##                        "Ora", "Data", "Sigla di chi risponde", 
+##                        "Note")
+##         ## change to alfanumeric id
+##         if (is.numeric(rl$ID))
+##             rl$ID <- lbmisc::to_00_char(rl$ID, floor(log10(max(rl$ID))) + 1)
 
-        return(rl)
-    })
+##         return(rl)
+##     })
 
-    ## -----------------
-    ## LATEX/PDF OUTPUT
-    ## -----------------
+##     ## -----------------
+##     ## LATEX/PDF OUTPUT
+##     ## -----------------
 
-    ## occorre aggiungere il nome dello strato
-    files <- paste(f, preprocess_varnames(names(x)), sep = '_')
-    Map(function(db, footer, file){
-        make_pdf_randlist(db, cfoot = footer, f = file)
-    }, x, as.list(footers), as.list(files))
+##     ## occorre aggiungere il nome dello strato
+##     files <- paste(f, preprocess_varnames(names(x)), sep = '_')
+##     Map(function(db, footer, file){
+##         make_pdf_randlist(db, cfoot = footer, f = file)
+##     }, x, as.list(footers), as.list(files))
                   
-    ## -----------------
-    ## EXCEL STUFF BELOW
-    ## -----------------
+##     ## -----------------
+##     ## EXCEL STUFF BELOW
+##     ## -----------------
     
-    ## Sheets' header
-    header_inv <- header_tc <- matrix(c("Dati del paziente",
-                                        rep(NA,3),
-                                        "Dati di chi chiama",
-                                        NA,
-                                        "Dati della chiamata",
-                                        NA,
-                                        "Sigla di chi risponde",
-                                        "Note"
-                                        ), nrow = 1)
-    header_inv[1, c(5,9)] <- c("Dati di chi risponde", "Sigla di chi chiama")
+##     ## Sheets' header
+##     header_inv <- header_tc <- matrix(c("Dati del paziente",
+##                                         rep(NA,3),
+##                                         "Dati di chi chiama",
+##                                         NA,
+##                                         "Dati della chiamata",
+##                                         NA,
+##                                         "Sigla di chi risponde",
+##                                         "Note"
+##                                         ), nrow = 1)
+##     header_inv[1, c(5,9)] <- c("Dati di chi risponde", "Sigla di chi chiama")
 
-    ## Setup the workbook
-    wb <- openxlsx::createWorkbook()
-    worksheet_creator <- function(s, foot) {
-        openxlsx::addWorksheet(wb = wb, sheetName = s,
-                               footer = c("Page &[Page] of &[Pages]", # left
-                                          foot,                       # centre
-                                          "&[Date] &[Time]") )        # right
-    }
-    Map(worksheet_creator, as.list(sheet_names), as.list(footer))
+##     ## Setup the workbook
+##     wb <- openxlsx::createWorkbook()
+##     worksheet_creator <- function(s, foot) {
+##         openxlsx::addWorksheet(wb = wb, sheetName = s,
+##                                footer = c("Page &[Page] of &[Pages]", # left
+##                                           foot,                       # centre
+##                                           "&[Date] &[Time]") )        # right
+##     }
+##     Map(worksheet_creator, as.list(sheet_names), as.list(footer))
   
-    ## Page setup variables
-    ColConversionFactor <- 6
-    RowConversionFactor <- 5.5^2
-    headerColWidths <- c(2.2, 3.1, 3.1, 1.5, 3, 3, 1.8, 2.5, 2.2, 4.2)#cm
-    headerRowHeights <- 1 # cm
-    otherRowHeights <- 2.3# cm
-    margins <- 0.4 # inches == 1 cm
+##     ## Page setup variables
+##     ColConversionFactor <- 6
+##     RowConversionFactor <- 5.5^2
+##     headerColWidths <- c(2.2, 3.1, 3.1, 1.5, 3, 3, 1.8, 2.5, 2.2, 4.2)#cm
+##     headerRowHeights <- 1 # cm
+##     otherRowHeights <- 2.3# cm
+##     margins <- 0.4 # inches == 1 cm
     
-    row_heights <- lapply(actual_n, function(n) {
-        ## rep(c(headerRowHeights, otherRowHeights), c(2, nrow(x[[1]])))
-        rep(c(headerRowHeights, otherRowHeights), c(2, n))
-    })
+##     row_heights <- lapply(actual_n, function(n) {
+##         ## rep(c(headerRowHeights, otherRowHeights), c(2, nrow(x[[1]])))
+##         rep(c(headerRowHeights, otherRowHeights), c(2, n))
+##     })
 
-    rlStyle <- openxlsx::createStyle(fontName = "Arial", 
-                                     fontSize = 12,
-                                     border = "TopBottomLeftRight",
-                                     textDecoration = "bold",
-                                     halign = "center",
-                                     valign = "center",
-                                     wrapText = TRUE)
+##     rlStyle <- openxlsx::createStyle(fontName = "Arial", 
+##                                      fontSize = 12,
+##                                      border = "TopBottomLeftRight",
+##                                      textDecoration = "bold",
+##                                      halign = "center",
+##                                      valign = "center",
+##                                      wrapText = TRUE)
 
-    ## Setup each sheet/dataset
-    Map(sheet_names,
-        row_heights,
-        f = function(s, rh){
+##     ## Setup each sheet/dataset
+##     Map(sheet_names,
+##         row_heights,
+##         f = function(s, rh){
                
-            openxlsx::pageSetup(wb = wb,
-                                sheet = s,
-                                scale = 83, # to make it all fits
-                                orientation = "landscape",
-                                fitToWidth = TRUE, 
-                                left = margins,
-                                right = margins,
-                                top = margins,
-                                bottom = margins * 1.5,
-                                printTitleRows = 1:2)
+##             openxlsx::pageSetup(wb = wb,
+##                                 sheet = s,
+##                                 scale = 83, # to make it all fits
+##                                 orientation = "landscape",
+##                                 fitToWidth = TRUE, 
+##                                 left = margins,
+##                                 right = margins,
+##                                 top = margins,
+##                                 bottom = margins * 1.5,
+##                                 printTitleRows = 1:2)
             
-            openxlsx::setColWidths(wb = wb,
-                                   sheet = s,
-                                   cols = 1:10,
-                                   widths = headerColWidths * ColConversionFactor)
+##             openxlsx::setColWidths(wb = wb,
+##                                    sheet = s,
+##                                    cols = 1:10,
+##                                    widths = headerColWidths * ColConversionFactor)
             
-            openxlsx::setRowHeights(wb = wb,
-                                    sheet = s, 
-                                    rows = seq_len(length(rh)),
-                                    heights = rh * RowConversionFactor)
+##             openxlsx::setRowHeights(wb = wb,
+##                                     sheet = s, 
+##                                     rows = seq_len(length(rh)),
+##                                     heights = rh * RowConversionFactor)
             
-            openxlsx::addStyle(wb = wb,
-                               sheet = s,
-                               style = rlStyle, 
-                               cols = seq_len(ncol(x[[s]])),
-                               rows = seq_len(nrow(x[[s]]) + 2), # +2 per l'header 
-                               gridExpand = TRUE)
+##             openxlsx::addStyle(wb = wb,
+##                                sheet = s,
+##                                style = rlStyle, 
+##                                cols = seq_len(ncol(x[[s]])),
+##                                rows = seq_len(nrow(x[[s]]) + 2), # +2 per l'header 
+##                                gridExpand = TRUE)
     
-            ## Merge Cells dell'header
-            openxlsx::mergeCells(wb = wb, sheet = s, cols = 1:4, rows = 1)
-            openxlsx::mergeCells(wb = wb, sheet = s, cols = 5:6, rows = 1)
-            openxlsx::mergeCells(wb = wb, sheet = s, cols = 7:8, rows = 1)
-            openxlsx::mergeCells(wb = wb, sheet = s, cols =   9, rows = 1:2)
-            openxlsx::mergeCells(wb = wb, sheet = s, cols =  10, rows = 1:2)
-        })
+##             ## Merge Cells dell'header
+##             openxlsx::mergeCells(wb = wb, sheet = s, cols = 1:4, rows = 1)
+##             openxlsx::mergeCells(wb = wb, sheet = s, cols = 5:6, rows = 1)
+##             openxlsx::mergeCells(wb = wb, sheet = s, cols = 7:8, rows = 1)
+##             openxlsx::mergeCells(wb = wb, sheet = s, cols =   9, rows = 1:2)
+##             openxlsx::mergeCells(wb = wb, sheet = s, cols =  10, rows = 1:2)
+##         })
 
 
-    ## -----------------------------
-    ## Trial Center List - full list
-    ## -----------------------------
-    wb_tc <- wb
-    lapply(sheet_names, function(s) {
-        ## header
-        openxlsx::writeData(wb = wb,
-                            sheet = s,
-                            x = header_tc,
-                            colNames = FALSE)
-        ## data
-        openxlsx::writeData(wb = wb_tc,
-                            sheet = s,
-                            x = x[[s]],
-                            startRow = 2)
-    })
-    if (is.null(f)) {
-        openxlsx::openXL(wb_tc)
-    } else {
-        tc_file <- paste0(f, '_TRIAL_CENTER.xlsx')
-        openxlsx::saveWorkbook(wb = wb_tc, file = tc_file, overwrite = TRUE)
-    }
+##     ## -----------------------------
+##     ## Trial Center List - full list
+##     ## -----------------------------
+##     wb_tc <- wb
+##     lapply(sheet_names, function(s) {
+##         ## header
+##         openxlsx::writeData(wb = wb,
+##                             sheet = s,
+##                             x = header_tc,
+##                             colNames = FALSE)
+##         ## data
+##         openxlsx::writeData(wb = wb_tc,
+##                             sheet = s,
+##                             x = x[[s]],
+##                             startRow = 2)
+##     })
+##     if (is.null(f)) {
+##         openxlsx::openXL(wb_tc)
+##     } else {
+##         tc_file <- paste0(f, '_TRIAL_CENTER.xlsx')
+##         openxlsx::saveWorkbook(wb = wb_tc, file = tc_file, overwrite = TRUE)
+##     }
 
-    ## -----------------------------
-    ## Investigators - blanked list
-    ## -----------------------------
-    if (!is.null(f)) {
-        wb_inv <- wb
-        lapply(sheet_names, function(s) {
-            ## header
-            openxlsx::writeData(wb = wb,
-                                sheet = s,
-                                x = header_inv,
-                                colNames = FALSE)
-            ## data
-            tmp <- x[[s]]
-            tmp$TRAT <- NA
-            openxlsx::writeData(wb = wb_inv,
-                                sheet = s,
-                                x = tmp,
-                                startRow = 2)
-        })
+##     ## -----------------------------
+##     ## Investigators - blanked list
+##     ## -----------------------------
+##     if (!is.null(f)) {
+##         wb_inv <- wb
+##         lapply(sheet_names, function(s) {
+##             ## header
+##             openxlsx::writeData(wb = wb,
+##                                 sheet = s,
+##                                 x = header_inv,
+##                                 colNames = FALSE)
+##             ## data
+##             tmp <- x[[s]]
+##             tmp$TRAT <- NA
+##             openxlsx::writeData(wb = wb_inv,
+##                                 sheet = s,
+##                                 x = tmp,
+##                                 startRow = 2)
+##         })
         
-        inv_file <- paste0(f, '_INVESTIGATORS.xlsx')
-        openxlsx::saveWorkbook(wb = wb_inv, file = inv_file, overwrite = TRUE)
+##         inv_file <- paste0(f, '_INVESTIGATORS.xlsx')
+##         openxlsx::saveWorkbook(wb = wb_inv, file = inv_file, overwrite = TRUE)
 
-    }
-}
+##     }
+## }
