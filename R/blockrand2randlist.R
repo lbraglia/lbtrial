@@ -86,7 +86,7 @@ randlist2pdf <- function(x = NULL,
 
     ## make a list of data.frames
     x <- normalize_randlists(x)
-    xnames <- lbmisc::preprocess_varnames(names(x))
+    xnames <- lbmisc::preprocess_varnames(names(x), dump_rev = FALSE)
     ## check that these are randlists
     are_rl <- lapply(x, function(x) all(c('id', 'treatment') %in% names(x)))
     if (!all(unlist(are_rl)))
@@ -124,7 +124,7 @@ randlist2pdf <- function(x = NULL,
     files <- paste(path_prefix, xnames, sep = '_')
     Map(function(db, footer, file){
         make_randlist_pdf(x = db, cfoot = footer, f = file)
-    }, x, as.list(footers), as.list(files))
+    }, x, as.list(footer), as.list(files))
     invisible(NULL)
 }
 
@@ -167,208 +167,112 @@ make_randlist_pdf <- function(x = NULL, cfoot = NULL, f = NULL){
 }
 
 
-## -------------------------------------------------------------------------
-## OLD STUFF
-## -------------------------------------------------------------------------
 
-# Create a randomization list from a list of blockrand generated data.frame 
-#
-# Create a randomization list from a list of blockrand generated data.frame
-# 
-# @param x named list of blockrand data.frame (names will be used as
-#     sheet name)
-# @param f path to file to save in (overwriting the contents). If
-#     NULL the list is displayed.
-# @param footer a character vector used as page central
-#     footer(s). Page numbers are on the left, while date/time is on
-#     the right.
-
-## old_blockrand2randlist <- function(x,
-##                                f = '/tmp/randlist',
-##                                footer = "") {
-
-##     x <- normalize_x(x)
-##     sheet_names <- names(x)
-
-##     if (!(is.character(footer) && length(footer) %in% c(1L, length(x)))){
-##         msg <- c("footer must be a character of length 1 ",
-##                  "or of the same number of x's data.frames")
-##         stop(msg)
-##     }
+#' Create pdf and xlsx randomization lists for a stratified, blocked study
+#'
+#' @param pi global PI
+#' @param acronym study acronym
+#' @param sample_size total sample size (a randomization list with
+#'     this numerosity will be created for each stratum/element of
+#'     stratas)
+#' @param seed random seed
+#' @param treatment_levels labels used to identify the groups
+#' @param block_size blocks dimensions
+#' @param centres id of involved centres
+#' @param stratas label for each strata
+#' @param local_pis a string for footers of the printed lists, in the
+#'     same number of stratas
+#' @param testing if TRUE it will generate a list using a different
+#'     seed, for testing purposese (eg EDC setup)
+#' @param print_checks print performed checks on the randomization lists
+#' @param export format of lists exporting
+#' @export
+blocked_stratified_randlist <- 
+    function(pi = '',                   # cognome del pi globale
+             acronym = '',            # acronimo dello studio
+             sample_size = NA,               # dimensione campione
+             seed = NA,                   # seme casuale
+             treatment_levels = c("C","T"),  # etichette gruppi
+             block_size = c(2L, 4L, 6L),     # dimensione blocchi blocking
+             centres = c('asmn'),            # centri
+             stratas = centres,              
+             local_pis = c('PI Cognome Nome (ASMN/AUSL)'),   # pi per centri
+             testing = FALSE,                # test or official randlist
+             print_checks = TRUE,
+             export = c('pdf', 'xlsx'))
+{
     
-##     if (!((is.character(f) && length(f) == 1L) || is.null(f)))
-##         stop('f must be a character of length 1 or NULL')
-
-##     ## actual n for each strata (depending on 
-##     actual_n <- unlist(lapply(x, nrow))
+    if (length(stratas) != length(local_pis))
+        stop("stratas and local_pis must have the same length")
     
-##     ## modify each data frame to a proper output format
-##     x <- lapply(x, function(rl){
-##         ## Add needed columns
-##         rl[c("Cognome.pz", "Nome.pz",
-##              "Cognome.dr", "Nome.dr",
-##              "Ora", "Data", "Sigla", "Note"
-##              )] <- NA
-##         ## Remove unneeded stuff
-##         rl <- rl[c("id", "Cognome.pz",  "Nome.pz",
-##                    "treatment", "Cognome.dr", "Nome.dr",
-##                    "Ora", "Data", "Sigla", "Note" )]
-##         ## Rename columns
-##         names(rl) <- c("ID", "Cognome",  "Nome",
-##                        "TRAT", "Cognome", "Nome",
-##                        "Ora", "Data", "Sigla di chi risponde", 
-##                        "Note")
-##         ## change to alfanumeric id
-##         if (is.numeric(rl$ID))
-##             rl$ID <- lbmisc::to_00_char(rl$ID, floor(log10(max(rl$ID))) + 1)
+    ## altri parametri utili generati automaticamente
+    names(treatment_levels) <- treatment_levels
+    footers <- sprintf("Studio %s - %s - [Strato: %s]", 
+                       acronym, local_pis, stratas)
+    mono_multicentrico <- if (length(centres) > 1) 'multicentrico' 
+                          else 'monocentrico'
+    n_gruppi_trattamento <- length(treatment_levels)
+    dimensione_blocchi <- paste(block_size, collapse = ', ')
 
-##         return(rl)
-##     })
+    ## generazione della lista
+    used_seed <- if (testing) 12345 else seed
+    set.seed(used_seed)
+    randlists <- lapply(stratas, function(x) {
+        blockrand::blockrand(n = sample_size,
+                             num.levels = length(treatment_levels),
+                             stratum = x, 
+                             levels = treatment_levels,
+                             block.sizes = rep(block_size / 2L, 2L))
+    })
+    names(randlists) <- stratas
+    ## Aggiunta id di strato
+    strata_prefix <- c(paste0(LETTERS[seq_along(names(randlists))], '-'))
+    add_strata_prefix <- function(rl, prefix) {
+        rl$id <- paste0(prefix, lbmisc::to_00_char(rl$id, 3))
+        rl
+    }
+    randlists <- Map(f = add_strata_prefix, randlists, strata_prefix)
 
-##     ## -----------------
-##     ## LATEX/PDF OUTPUT
-##     ## -----------------
+    ## ------
+    ## CHECKS
+    ## ------
+    if (print_checks){
+        f <- function(x, fun, as.vec = TRUE){
+            rval <- lapply(X = x, FUN = fun)
+            if (as.vec) unlist(rval) else rval
+        }
+        message('Numerosità per strato')
+        print(f(randlists, nrow))
+        message('Numero di blocchi per strato')
+        print(f(randlists,  function(x) length(unique(x$block.id))))
+        message('Bilanciamento complessivo per strato')
+        print(do.call('rbind', f(randlists, function(x) table(x$treatment), FALSE)))
+        message('Bilanciamento entro ciascun blocco dello strato')
+        print(f(randlists, function(x) {    
+            tmp <- as.matrix(table(x$block.id, x$treatment))
+            all(tmp[, 1] == tmp[, 2])
+        }))
+    }
 
-##     ## occorre aggiungere il nome dello strato
-##     files <- paste(f, preprocess_varnames(names(x)), sep = '_')
-##     Map(function(db, footer, file){
-##         make_pdf_randlist(db, cfoot = footer, f = file)
-##     }, x, as.list(footers), as.list(files))
-                  
-##     ## -----------------
-##     ## EXCEL STUFF BELOW
-##     ## -----------------
+    ## ------
+    ## OUTPUT
+    ## ------
+    testing_string <- if (testing) 'TESTING' else 'OFFICIAL'
+    if ('pdf' %in% export){
+        pdf_path  <- sprintf("/tmp/%s_%s_%s_pdf_randomization_lists",
+                             pi, acronym, testing_string)
+        lbrct::randlist2pdf(x = randlists, 
+                            path_prefix = pdf_path, 
+                            footer = footers)
+    }
     
-##     ## Sheets' header
-##     header_inv <- header_tc <- matrix(c("Dati del paziente",
-##                                         rep(NA,3),
-##                                         "Dati di chi chiama",
-##                                         NA,
-##                                         "Dati della chiamata",
-##                                         NA,
-##                                         "Sigla di chi risponde",
-##                                         "Note"
-##                                         ), nrow = 1)
-##     header_inv[1, c(5,9)] <- c("Dati di chi risponde", "Sigla di chi chiama")
-
-##     ## Setup the workbook
-##     wb <- openxlsx::createWorkbook()
-##     worksheet_creator <- function(s, foot) {
-##         openxlsx::addWorksheet(wb = wb, sheetName = s,
-##                                footer = c("Page &[Page] of &[Pages]", # left
-##                                           foot,                       # centre
-##                                           "&[Date] &[Time]") )        # right
-##     }
-##     Map(worksheet_creator, as.list(sheet_names), as.list(footer))
-  
-##     ## Page setup variables
-##     ColConversionFactor <- 6
-##     RowConversionFactor <- 5.5^2
-##     headerColWidths <- c(2.2, 3.1, 3.1, 1.5, 3, 3, 1.8, 2.5, 2.2, 4.2)#cm
-##     headerRowHeights <- 1 # cm
-##     otherRowHeights <- 2.3# cm
-##     margins <- 0.4 # inches == 1 cm
+    if ('xlsx' %in% export){
+        xlsx_path <- sprintf("/tmp/%s_%s_%s_raw_randomization_lists",
+                             pi, acronym, testing_string)
+        select <- lapply(randlists, 
+                         function(x) x[,c('id', 'stratum', 'treatment')])
+        openxlsx::write.xlsx(x = select, file = paste0(xlsx_path, '.xlsx'))
+    }
     
-##     row_heights <- lapply(actual_n, function(n) {
-##         ## rep(c(headerRowHeights, otherRowHeights), c(2, nrow(x[[1]])))
-##         rep(c(headerRowHeights, otherRowHeights), c(2, n))
-##     })
-
-##     rlStyle <- openxlsx::createStyle(fontName = "Arial", 
-##                                      fontSize = 12,
-##                                      border = "TopBottomLeftRight",
-##                                      textDecoration = "bold",
-##                                      halign = "center",
-##                                      valign = "center",
-##                                      wrapText = TRUE)
-
-##     ## Setup each sheet/dataset
-##     Map(sheet_names,
-##         row_heights,
-##         f = function(s, rh){
-               
-##             openxlsx::pageSetup(wb = wb,
-##                                 sheet = s,
-##                                 scale = 83, # to make it all fits
-##                                 orientation = "landscape",
-##                                 fitToWidth = TRUE, 
-##                                 left = margins,
-##                                 right = margins,
-##                                 top = margins,
-##                                 bottom = margins * 1.5,
-##                                 printTitleRows = 1:2)
-            
-##             openxlsx::setColWidths(wb = wb,
-##                                    sheet = s,
-##                                    cols = 1:10,
-##                                    widths = headerColWidths * ColConversionFactor)
-            
-##             openxlsx::setRowHeights(wb = wb,
-##                                     sheet = s, 
-##                                     rows = seq_len(length(rh)),
-##                                     heights = rh * RowConversionFactor)
-            
-##             openxlsx::addStyle(wb = wb,
-##                                sheet = s,
-##                                style = rlStyle, 
-##                                cols = seq_len(ncol(x[[s]])),
-##                                rows = seq_len(nrow(x[[s]]) + 2), # +2 per l'header 
-##                                gridExpand = TRUE)
-    
-##             ## Merge Cells dell'header
-##             openxlsx::mergeCells(wb = wb, sheet = s, cols = 1:4, rows = 1)
-##             openxlsx::mergeCells(wb = wb, sheet = s, cols = 5:6, rows = 1)
-##             openxlsx::mergeCells(wb = wb, sheet = s, cols = 7:8, rows = 1)
-##             openxlsx::mergeCells(wb = wb, sheet = s, cols =   9, rows = 1:2)
-##             openxlsx::mergeCells(wb = wb, sheet = s, cols =  10, rows = 1:2)
-##         })
-
-
-##     ## -----------------------------
-##     ## Trial Center List - full list
-##     ## -----------------------------
-##     wb_tc <- wb
-##     lapply(sheet_names, function(s) {
-##         ## header
-##         openxlsx::writeData(wb = wb,
-##                             sheet = s,
-##                             x = header_tc,
-##                             colNames = FALSE)
-##         ## data
-##         openxlsx::writeData(wb = wb_tc,
-##                             sheet = s,
-##                             x = x[[s]],
-##                             startRow = 2)
-##     })
-##     if (is.null(f)) {
-##         openxlsx::openXL(wb_tc)
-##     } else {
-##         tc_file <- paste0(f, '_TRIAL_CENTER.xlsx')
-##         openxlsx::saveWorkbook(wb = wb_tc, file = tc_file, overwrite = TRUE)
-##     }
-
-##     ## -----------------------------
-##     ## Investigators - blanked list
-##     ## -----------------------------
-##     if (!is.null(f)) {
-##         wb_inv <- wb
-##         lapply(sheet_names, function(s) {
-##             ## header
-##             openxlsx::writeData(wb = wb,
-##                                 sheet = s,
-##                                 x = header_inv,
-##                                 colNames = FALSE)
-##             ## data
-##             tmp <- x[[s]]
-##             tmp$TRAT <- NA
-##             openxlsx::writeData(wb = wb_inv,
-##                                 sheet = s,
-##                                 x = tmp,
-##                                 startRow = 2)
-##         })
-        
-##         inv_file <- paste0(f, '_INVESTIGATORS.xlsx')
-##         openxlsx::saveWorkbook(wb = wb_inv, file = inv_file, overwrite = TRUE)
-
-##     }
-## }
+    randlists
+}
