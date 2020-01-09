@@ -4,19 +4,9 @@
 #' @docType package
 #' @importFrom lbmisc preprocess_varnames
 #' @importFrom lbmisc to_00_char
+#' @importFrom blockrand blockrand
+#' @importFrom blockrand plotblockrand
 #' @importFrom xtable xtable
 #' @importFrom xtable print.xtable
 #' @importFrom tools texi2pdf
 NULL
-
-# @importFrom openxlsx addStyle
-# @importFrom openxlsx addWorksheet
-# @importFrom openxlsx createStyle
-# @importFrom openxlsx createWorkbook
-# @importFrom openxlsx mergeCells
-# @importFrom openxlsx openXL
-# @importFrom openxlsx pageSetup
-# @importFrom openxlsx saveWorkbook
-# @importFrom openxlsx setColWidths
-# @importFrom openxlsx setRowHeights
-# @importFrom openxlsx writeData

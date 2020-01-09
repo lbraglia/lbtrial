@@ -4,11 +4,20 @@
 \alias{blocked_stratified_randlist}
 \title{Create pdf and xlsx randomization lists for a stratified, blocked study}
 \usage{
-blocked_stratified_randlist(pi = "", acronym = "", sample_size = NA,
-  seed = NA, treatment_levels = c("C", "T"), block_size = c(2L, 4L,
-  6L), centres = c("asmn"), stratas = centres,
-  local_pis = c("PI Cognome Nome (ASMN/AUSL)"), testing = FALSE,
-  print_checks = TRUE, export = c("pdf", "xlsx"))
+blocked_stratified_randlist(
+  pi = "",
+  acronym = "",
+  sample_size = NA,
+  seed = NA,
+  treatment_levels = c("C", "T"),
+  block_size = c(2L, 4L, 6L),
+  centres = c("asmn"),
+  stratas = centres,
+  local_pis = c("PI Cognome Nome (ASMN/AUSL)"),
+  testing = FALSE,
+  print_checks = TRUE,
+  export = c("pdf", "xlsx")
+)
 }
 \arguments{
 \item{pi}{global PI}

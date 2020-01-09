@@ -168,7 +168,8 @@ make_randlist_pdf <- function(x = NULL, cfoot = NULL, f = NULL){
 
 
 
-#' Create pdf and xlsx randomization lists for a stratified, blocked study
+#' Create pdf, envelopes and xlsx randomization lists for a
+#' stratified, blocked study
 #'
 #' @param pi global PI
 #' @param acronym study acronym
@@ -184,8 +185,12 @@ make_randlist_pdf <- function(x = NULL, cfoot = NULL, f = NULL){
 #'     same number of stratas
 #' @param testing if TRUE it will generate a list using a different
 #'     seed, for testing purposese (eg EDC setup)
-#' @param print_checks print performed checks on the randomization lists
-#' @param export format of lists exporting
+#' @param print_checks print performed checks on the randomization
+#'     lists
+#' @param export format of lists exporting (can have pdf, xlsx and/or
+#'     envelopes)
+#' @param env_params envelopes parameters for printing (passed to
+#'     blockrand::plotblockrand)
 #' @export
 blocked_stratified_randlist <- 
     function(pi = '',                   # cognome del pi globale
@@ -199,7 +204,8 @@ blocked_stratified_randlist <-
              local_pis = c('PI Cognome Nome (ASMN/AUSL)'),   # pi per centri
              testing = FALSE,                # test or official randlist
              print_checks = TRUE,
-             export = c('pdf', 'xlsx'))
+             export = c('pdf', 'xlsx', 'envelopes'),
+             env_params = list(width = 11, height = 8))
 {
     
     if (length(stratas) != length(local_pis))
@@ -228,7 +234,8 @@ blocked_stratified_randlist <-
     ## Aggiunta id di strato
     strata_prefix <- c(paste0(LETTERS[seq_along(names(randlists))], '-'))
     add_strata_prefix <- function(rl, prefix) {
-        rl$id <- paste0(prefix, lbmisc::to_00_char(rl$id, 3))
+        nmax_digits <- ceiling(max(log10(rl$id)))
+        rl$id <- paste0(prefix, lbmisc::to_00_char(rl$id, nmax_digits))
         rl
     }
     randlists <- Map(f = add_strata_prefix, randlists, strata_prefix)
@@ -273,6 +280,71 @@ blocked_stratified_randlist <-
                          function(x) x[,c('id', 'stratum', 'treatment')])
         openxlsx::write.xlsx(x = select, file = paste0(xlsx_path, '.xlsx'))
     }
+
+    if ('envelopes' %in% export){
+        pdf_path  <- sprintf("/tmp/%s_%s_%s_envelopes",
+                             pi, acronym, testing_string)
+        lbrct::randlist2envelopes(x = randlists,
+                                  path_prefix = pdf_path,
+                                  study_acronym = acronym,
+                                  env_params = env_params)
+    }
     
     randlists
 }
+
+
+#' Create randomization envelopes from a list of blockrand
+#' generated data.frame 
+#'
+#' Create randomization envelopes from a list of blockrand
+#' generated data.frame
+#' 
+#' @param x a single data.frame or a named randlist (that is a
+#'     data.frame with id and treatment columns). Names are used for
+#'     file naming
+#' @param path_prefix path prefix of the files to save
+#'     in (overwriting the contents).
+#' @param study_acronym a character vector used as acronym
+#' @param env_params list of parameters passed to blockrand::plotblockrand
+#' @export
+randlist2envelopes <- function(x = NULL,
+                               path_prefix = '/tmp/envelopes',
+                               study_acronym = "",
+                               env_params = list()) {
+
+    ## make a list of data.frames
+    x <- normalize_randlists(x)
+    xnames <- lbmisc::preprocess_varnames(names(x), dump_rev = FALSE)
+    ## check that these are randlists
+    are_rl <- lapply(x, function(x) all(c('id', 'treatment') %in% names(x)))
+    if (!all(unlist(are_rl)))
+        stop('x has not id and/or treatment variable/s')
+
+    if (!(is.character(path_prefix) && length(path_prefix) == 1L))
+        stop('path_prefix must be a character of length 1')
+    
+    ## occorre aggiungere il nome dello strato
+    files <- paste0(path_prefix, '_', xnames, '.pdf')
+    Map(function(x, f){
+        study_acronym_label <- sprintf("Study: %s", study_acronym)
+        blockrand_text <- list(
+            top = list(text = c(study_acronym_label,
+                                "Strata: %STRAT%",
+                                'Patient ID: %ID%',
+                                'Treatment: %TREAT%'),
+                       font = c(1,1,1,2)),
+            middle = list(text = c(study_acronym_label,
+                                   "Strata: %STRAT%",
+                                   "Patient ID: %ID%"),
+                          font = 1),
+            bottom = "")
+        plot_params <- c(list(x = x, file = f,
+                              blockrand.text = blockrand_text,
+                              cut.marks = TRUE),
+                         env_params)
+        do.call(blockrand::plotblockrand, plot_params)
+    }, x, as.list(files))
+    invisible(NULL)
+}
+

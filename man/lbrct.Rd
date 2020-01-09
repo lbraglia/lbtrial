@@ -3,7 +3,6 @@
 \docType{package}
 \name{lbrct}
 \alias{lbrct}
-\alias{lbrct-package}
 \title{lbrct.}
 \description{
 lbrct.
