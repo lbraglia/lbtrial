@@ -4,6 +4,3 @@
 \name{lbrct}
 \alias{lbrct}
 \title{lbrct.}
-\description{
-lbrct.
-}

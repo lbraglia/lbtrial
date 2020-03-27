@@ -232,7 +232,12 @@ blocked_stratified_randlist <-
     })
     names(randlists) <- stratas
     ## Aggiunta id di strato
-    strata_prefix <- c(paste0(LETTERS[seq_along(names(randlists))], '-'))
+    ## OLD letters
+    ## strata_prefix <- c(paste0(LETTERS[seq_along(names(randlists))], '-'))
+    ## NEW numeric (000-000)
+    strata_prefix <-
+        paste0(lbmisc::to_00_char(seq_along(names(randlists)), 3L), '-')
+
     add_strata_prefix <- function(rl, prefix) {
         nmax_digits <- ceiling(max(log10(rl$id)))
         rl$id <- paste0(prefix, lbmisc::to_00_char(rl$id, nmax_digits))

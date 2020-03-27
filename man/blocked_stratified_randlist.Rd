@@ -2,7 +2,8 @@
 % Please edit documentation in R/blockrand2randlist.R
 \name{blocked_stratified_randlist}
 \alias{blocked_stratified_randlist}
-\title{Create pdf and xlsx randomization lists for a stratified, blocked study}
+\title{Create pdf, envelopes and xlsx randomization lists for a
+stratified, blocked study}
 \usage{
 blocked_stratified_randlist(
   pi = "",
@@ -16,7 +17,8 @@ blocked_stratified_randlist(
   local_pis = c("PI Cognome Nome (ASMN/AUSL)"),
   testing = FALSE,
   print_checks = TRUE,
-  export = c("pdf", "xlsx")
+  export = c("pdf", "xlsx", "envelopes"),
+  env_params = list(width = 11, height = 8)
 )
 }
 \arguments{
@@ -44,10 +46,16 @@ same number of stratas}
 \item{testing}{if TRUE it will generate a list using a different
 seed, for testing purposese (eg EDC setup)}
 
-\item{print_checks}{print performed checks on the randomization lists}
+\item{print_checks}{print performed checks on the randomization
+lists}
 
-\item{export}{format of lists exporting}
+\item{export}{format of lists exporting (can have pdf, xlsx and/or
+envelopes)}
+
+\item{env_params}{envelopes parameters for printing (passed to
+blockrand::plotblockrand)}
 }
 \description{
-Create pdf and xlsx randomization lists for a stratified, blocked study
+Create pdf, envelopes and xlsx randomization lists for a
+stratified, blocked study
 }
