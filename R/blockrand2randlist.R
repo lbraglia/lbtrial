@@ -269,26 +269,25 @@ blocked_stratified_randlist <-
     ## ------
     ## OUTPUT
     ## ------
-    testing_string <- if (testing) 'TESTING' else 'OFFICIAL'
+    ## std_path <- sprintf("/tmp/%s_%s%s", pi, acronym,
+    ##                     if (testing) '_TESTING' else '')
+    std_path <- sprintf("/tmp/%s%s", acronym, if (testing) '_TESTING' else '')
     if ('pdf' %in% export){
-        pdf_path  <- sprintf("/tmp/%s_%s_%s_pdf_randomization_lists",
-                             pi, acronym, testing_string)
+        pdf_path <- std_path
         lbrct::randlist2pdf(x = randlists, 
                             path_prefix = pdf_path, 
                             footer = footers)
     }
     
     if ('xlsx' %in% export){
-        xlsx_path <- sprintf("/tmp/%s_%s_%s_raw_randomization_lists",
-                             pi, acronym, testing_string)
+        xlsx_path <- std_path
         select <- lapply(randlists, 
                          function(x) x[,c('id', 'stratum', 'treatment')])
         openxlsx::write.xlsx(x = select, file = paste0(xlsx_path, '.xlsx'))
     }
 
     if ('envelopes' %in% export){
-        pdf_path  <- sprintf("/tmp/%s_%s_%s_envelopes",
-                             pi, acronym, testing_string)
+        pdf_path  <- paste0(std_path, "_envelopes")
         lbrct::randlist2envelopes(x = randlists,
                                   path_prefix = pdf_path,
                                   study_acronym = acronym,
