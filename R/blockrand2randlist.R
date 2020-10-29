@@ -126,7 +126,7 @@ blocked_stratified_randlist <-
         if ('xlsx' %in% export_format){
             
             lbrct::randlist2xlsx(x = randlists,
-                                 local_pi = local_pi, 
+                                 local_pis = local_pis, 
                                  export = export)
 
             
@@ -172,10 +172,10 @@ blocked_stratified_randlist <-
 #'     (used to export selectively)
 #' @export
 randlist2xlsx <- function(x = NULL,
-                          local_pi = '',
+                          local_pis = '',
                           export = TRUE){
     
-    x <- Map(format_xlsx, x, as.list(local_pi))
+    x <- Map(format_xlsx, x, as.list(local_pis))
     tmp <- Map(xlsx_exporter, x, as.list(names(x)),
                as.list(export))
     
