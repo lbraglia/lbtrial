@@ -33,9 +33,9 @@ blocked_stratified_randlist <-
              seed = NA,                   # seme casuale
              treatment_levels = c("C","T"),  # etichette gruppi
              block_size = c(2L, 4L, 6L),     # dimensione blocchi blocking
-             centres = c('asmn'),            # centri
+             centres = c('auslre'),            # centri
              stratas = centres,              
-             local_pis = c('PI Cognome Nome (ASMN/AUSL)'),   # pi per centri
+             local_pis = c('PI Cognome Nome (AUSL RE-Irccs)'), # pi per centri
              testing = FALSE,                # test or official randlist
              print_checks = TRUE,
              export = TRUE,

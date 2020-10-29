@@ -9,6 +9,7 @@ randlist2envelopes(
   x = NULL,
   path_prefix = "/tmp/envelopes",
   study_acronym = "",
+  export = TRUE,
   env_params = list()
 )
 }
@@ -21,6 +22,9 @@ file naming}
 in (overwriting the contents).}
 
 \item{study_acronym}{a character vector used as acronym}
+
+\item{export}{logical recycled, wheter to export or not a list
+(used to export selectively)}
 
 \item{env_params}{list of parameters passed to blockrand::plotblockrand}
 }

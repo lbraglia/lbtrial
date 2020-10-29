@@ -2,8 +2,7 @@
 % Please edit documentation in R/blockrand2randlist.R
 \name{blocked_stratified_randlist}
 \alias{blocked_stratified_randlist}
-\title{Create pdf, envelopes and xlsx randomization lists for a
-stratified, blocked study}
+\title{Create randomization lists}
 \usage{
 blocked_stratified_randlist(
   pi = "",
@@ -12,12 +11,13 @@ blocked_stratified_randlist(
   seed = NA,
   treatment_levels = c("C", "T"),
   block_size = c(2L, 4L, 6L),
-  centres = c("asmn"),
+  centres = c("auslre"),
   stratas = centres,
-  local_pis = c("PI Cognome Nome (ASMN/AUSL)"),
+  local_pis = c("PI Cognome Nome (AUSL RE-Irccs)"),
   testing = FALSE,
   print_checks = TRUE,
-  export = c("pdf", "xlsx", "envelopes"),
+  export = TRUE,
+  export_format = c("pdf", "xlsx", "xlsx_minimal", "envelopes"),
   env_params = list(width = 11, height = 8)
 )
 }
@@ -49,13 +49,16 @@ seed, for testing purposese (eg EDC setup)}
 \item{print_checks}{print performed checks on the randomization
 lists}
 
-\item{export}{format of lists exporting (can have pdf, xlsx and/or
-envelopes)}
+\item{export}{logical (recicled, by default TRUE), which
+randomization lists to export}
+
+\item{export_format}{format of lists exporting (can have pdf, xlsx
+and/or envelopes)}
 
 \item{env_params}{envelopes parameters for printing (passed to
 blockrand::plotblockrand)}
 }
 \description{
 Create pdf, envelopes and xlsx randomization lists for a
-stratified, blocked study
+stratified, blocked study and export them
 }

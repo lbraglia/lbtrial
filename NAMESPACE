@@ -3,6 +3,7 @@
 export(blocked_stratified_randlist)
 export(randlist2envelopes)
 export(randlist2pdf)
+export(randlist2xlsx)
 importFrom(blockrand,blockrand)
 importFrom(blockrand,plotblockrand)
 importFrom(lbmisc,preprocess_varnames)

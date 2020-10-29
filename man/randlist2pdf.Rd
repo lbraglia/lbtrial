@@ -5,19 +5,27 @@
 \title{Create pdf randomization lists from a list of blockrand
 generated data.frame}
 \usage{
-randlist2pdf(x = NULL, path_prefix = "/tmp/randlist", footer = "")
+randlist2pdf(
+  x = NULL,
+  path_prefix = "/tmp/randlist",
+  footer = "",
+  export = TRUE
+)
 }
 \arguments{
 \item{x}{a single data.frame or a named randlist (that is a
 data.frame with id and treatment columns). Names are used for
 file naming}
 
-\item{path_prefix}{path prefix of the files to save
-in (overwriting the contents).}
+\item{path_prefix}{path prefix of the files to save in (overwriting
+the contents).}
 
 \item{footer}{a character vector used as page central
 footer(s). Must be of length 1 if x is a data.frame or of the
 same length of x, if it's a list.}
+
+\item{export}{logical recycled, wheter to export or not a list
+(used to export selectively)}
 }
 \description{
 Create pdf randomization lists from a list of blockrand
