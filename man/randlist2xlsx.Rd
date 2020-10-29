@@ -5,17 +5,17 @@
 \title{Create xlsx randomization lists from a list of blockrand
 generated data.frame}
 \usage{
-randlist2xlsx(x = NULL, local_pi = "", export = TRUE)
+randlist2xlsx(x = NULL, local_pis = "", export = TRUE)
 }
 \arguments{
 \item{x}{a single data.frame or a named randlist (that is a
 data.frame with id and treatment columns). Names are used for
 file naming}
 
-\item{local_pi}{local principal investigators}
-
 \item{export}{logical recycled, wheter to export or not a list
 (used to export selectively)}
+
+\item{local_pi}{local principal investigators}
 }
 \description{
 Create xlsx randomization lists from a list of blockrand
