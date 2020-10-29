@@ -68,7 +68,7 @@ blocked_stratified_randlist <-
 
     ## aggiungere anche i pi locali male non fa per le esportazioni
     names(randlists) <-
-        lbmisc::preprocess_varnames(paste(stratas, local_pi),
+        lbmisc::preprocess_varnames(paste(stratas, local_pis),
                                     dump_rev = FALSE)
 
     ## Aggiunta id di strato
