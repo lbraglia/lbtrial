@@ -79,7 +79,8 @@ blocked_stratified_randlist <-
         paste0(lbmisc::to_00_char(seq_along(names(randlists)), 3L), '-')
 
     add_strata_prefix <- function(rl, prefix) {
-        nmax_digits <- ceiling(max(log10(rl$id)))
+        # +.00001 per sample size 100
+        nmax_digits <- ceiling(max(log10(rl$id)) + 0.00001) 
         rl$id <- paste0(prefix, lbmisc::to_00_char(rl$id, nmax_digits))
         rl
     }
