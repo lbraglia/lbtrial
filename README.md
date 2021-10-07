@@ -1,4 +1,6 @@
-# lbrct [![Build Status](https://travis-ci.org/lbraglia/lbrct.svg)](https://travis-ci.org/lbraglia/lbrct)
+# lbtrial
 
-Some rct-related utility functions from
-[yapomif](http://github.com/lbraglia/yapomif), re-engineered a bit.
+Some trial-related utility functions and wrappers for
+- phase2 (ahern design)
+- blocked stratified randomization
+- etc

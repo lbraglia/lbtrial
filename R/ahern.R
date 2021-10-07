@@ -1,5 +1,12 @@
 #' Function to implement exact single-stage phase II design a-la AHern
 #'
+#' @param p0 response probability used in the definition of the null hypothesis
+#' @param p1 desirable response probability at which the trial is powered
+#' @param alpha type I error (default 0.05)
+#' @param beta type II error  (default 0.2)
+#' @param sample_sizes checked sample sizes, should be enough for most
+#'     situations
+#' 
 #' @references A'Hern, Sample size tables for exact single-stage phase
 #'     II designs, Statist. Med. 2001; 20:859–866
 #' 
@@ -53,6 +60,12 @@ ahern <- function(p0, p1, alpha = 0.05, beta = 0.2, sample_sizes = 1:2000){
         res <- worker(p0 = p0, p1 = p1, a = alpha, b = beta, n = ss)
         if (!is.na(res)) break
     }
-    data.frame(p0, p1, alpha, beta, sample_size = ss, cutoffs = res)
-}
 
+    ## calcola il lower.ci dell'intervallo di clopper pearson sotto le ipotesi
+    ## ed effettua checks
+    ci <- binom.test(res, ss, alternative = 'greater', conf.level = 1 - alpha)
+    lower_ci <- ci$conf.int[1]
+    check <- lower_ci > p0
+    data.frame(p0, p1, alpha, beta, sample_size = ss, cutoffs = res,
+               lower_ci = lower_ci, lower_ci_gt_p0 = check)
+}
