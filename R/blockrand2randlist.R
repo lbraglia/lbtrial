@@ -118,7 +118,7 @@ blocked_stratified_randlist <-
         if ('pdf' %in% export_format){
             pdf_path  <- paste0(std_path, "_randlist")
             ## pdf_path <- std_path
-            lbrct::randlist2pdf(x = randlists, 
+            lbtrial::randlist2pdf(x = randlists, 
                                 path_prefix = pdf_path, 
                                 footer = footers,
                                 export = export)
@@ -126,7 +126,7 @@ blocked_stratified_randlist <-
         
         if ('xlsx' %in% export_format){
             
-            lbrct::randlist2xlsx(x = randlists,
+            lbtrial::randlist2xlsx(x = randlists,
                                  local_pis = local_pis, 
                                  export = export)
 
@@ -144,7 +144,7 @@ blocked_stratified_randlist <-
         
         if ('envelopes' %in% export_format){
             pdf_path  <- paste0(std_path, "_envelopes")
-            lbrct::randlist2envelopes(x = randlists,
+            lbtrial::randlist2envelopes(x = randlists,
                                       path_prefix = pdf_path,
                                       study_acronym = acronym,
                                       env_params = env_params,

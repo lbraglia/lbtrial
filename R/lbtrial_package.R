@@ -1,6 +1,6 @@
-#' lbrct.
+#' lbtrial.
 #'
-#' @name lbrct
+#' @name lbtrial
 #' @docType package
 #' @importFrom lbmisc preprocess_varnames
 #' @importFrom lbmisc to_00_char
