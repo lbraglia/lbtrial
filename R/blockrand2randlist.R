@@ -65,16 +65,9 @@ blocked_stratified_randlist <-
                              levels = treatment_levels,
                              block.sizes = rep(block_size / 2L, 2L))
     })
+    names(randlists) <- stratas
 
-    ## aggiungere anche i pi locali male non fa per le esportazioni
-    names(randlists) <-
-        lbmisc::preprocess_varnames(paste(stratas, local_pis),
-                                    dump_rev = FALSE)
-
-    ## Aggiunta id di strato
-    ## OLD letters
-    ## strata_prefix <- c(paste0(LETTERS[seq_along(names(randlists))], '-'))
-    ## NEW numeric (000-000)
+    ## Aggiunta id numerico di strato all'id paziente  (000-000)
     strata_prefix <-
         paste0(lbmisc::to_00_char(seq_along(names(randlists)), 3L), '-')
 
