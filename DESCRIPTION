@@ -8,5 +8,5 @@ Depends:
 Imports: lbmisc, xtable
 License: GPL-3
 LazyData: true
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Encoding: UTF-8
